@@ -21,9 +21,9 @@ export type WhitelistOption = Array<string>;
 export type UseBuiltInsOption = boolean;
 export type BrowserslistQuery = Array<string> | string;
 export type TargetsOption = {
+  [target: string]: TargetType,
   browsers?: BrowserslistQuery,
   node?: NodeType,
-  [target: string]: TargetType
 };
 export type Options = {
   whitelist?: Array<string>,
@@ -34,7 +34,7 @@ export type Options = {
   loose?: LooseOption,
   moduleType?: ModuleOption,
   targets?: TargetsOption,
-  useBuiltIns?: UseBuiltInsOption
+  useBuiltIns?: UseBuiltInsOption,
 };
 export type StrictOptions = {|
   debug: DebugOption,
@@ -43,16 +43,13 @@ export type StrictOptions = {|
   loose: LooseOption,
   moduleType: ModuleOption,
   targets: TargetsOption,
-  useBuiltIns: UseBuiltInsOption
+  useBuiltIns: UseBuiltInsOption,
 |};
 
 // Data
-export type DataType {
-  [target: string]: number
+export type DataType = {
+  [target: string]: number,
 };
 
 // Babel
-export type PluginType = [
-  Object,
-  Options
-]
+export type PluginType = [Object, Options];

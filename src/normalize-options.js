@@ -8,9 +8,9 @@ import type { ModuleOption, Options, StrictOptions } from "./types";
 
 const validIncludesAndExcludes: Array<string> = [
   ...Object.keys(pluginFeatures),
-  ...Object.keys(moduleTransformations).map((m) => moduleTransformations[m]),
+  ...Object.keys(moduleTransformations).map(m => moduleTransformations[m]),
   ...Object.keys(builtInsList),
-  ...defaultInclude
+  ...defaultInclude,
 ];
 
 export const validateIncludesAndExcludes = (
@@ -22,12 +22,15 @@ export const validateIncludesAndExcludes = (
     `Invalid Option: The '${type}' option must be an Array<String> of plugins/built-ins`,
   );
 
-  const unknownOpts = opts.reduce((all, opt) => {
-    if (validIncludesAndExcludes.indexOf(opt) === -1) {
-      return all.concat(opt);
-    }
-    return all;
-  }, []);
+  const unknownOpts = opts.reduce(
+    (all, opt) => {
+      if (validIncludesAndExcludes.indexOf(opt) === -1) {
+        return all.concat(opt);
+      }
+      return all;
+    },
+    [],
+  );
 
   invariant(
     unknownOpts.length === 0,
@@ -38,12 +41,11 @@ export const validateIncludesAndExcludes = (
   return opts;
 };
 
-
 export const checkDuplicateIncludeExcludes = (
   include: Array<string> = [],
   exclude: Array<string> = [],
 ): void => {
-  const duplicates = include.filter((opt) => exclude.indexOf(opt) >= 0);
+  const duplicates = include.filter(opt => exclude.indexOf(opt) >= 0);
 
   invariant(
     duplicates.length === 0,
@@ -52,14 +54,13 @@ export const checkDuplicateIncludeExcludes = (
   );
 };
 
-
 // TODO: Allow specifying plugins as either shortened or full name
 // babel-plugin-transform-es2015-classes
 // transform-es2015-classes
 export const validateLooseOption = (looseOpt: boolean = false): boolean => {
   invariant(
     typeof looseOpt === "boolean",
-    "Invalid Option: The 'loose' option must be a boolean."
+    "Invalid Option: The 'loose' option must be a boolean.",
   );
 
   return looseOpt;
@@ -78,20 +79,19 @@ export const validateModulesOption = (
   return modulesOpt;
 };
 
-
 export default function normalizeOptions(opts: Options): StrictOptions {
   // TODO: remove whitelist in favor of include in next major
   if (opts.whitelist) {
     console.warn(
       `Deprecation Warning: The "whitelist" option has been deprecated in favor of "include" to
-      match the newly added "exclude" option (instead of "blacklist").`
+      match the newly added "exclude" option (instead of "blacklist").`,
     );
   }
 
   invariant(
     !(opts.whitelist && opts.include),
     `Invalid Option: The "whitelist" and the "include" option are the same and one can be used at
-    a time`
+    a time`,
   );
 
   checkDuplicateIncludeExcludes(opts.whitelist || opts.include, opts.exclude);
@@ -99,10 +99,13 @@ export default function normalizeOptions(opts: Options): StrictOptions {
   return {
     debug: opts.debug,
     exclude: validateIncludesAndExcludes(opts.exclude, "exclude"),
-    include: validateIncludesAndExcludes(opts.whitelist || opts.include, "include"),
+    include: validateIncludesAndExcludes(
+      opts.whitelist || opts.include,
+      "include",
+    ),
     loose: validateLooseOption(opts.loose),
     moduleType: validateModulesOption(opts.modules),
     targets: opts.targets,
-    useBuiltIns: opts.useBuiltIns
+    useBuiltIns: opts.useBuiltIns,
   };
 }

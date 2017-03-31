@@ -12,6 +12,7 @@
     "build-data": "babel-node ./scripts/build-data.js",
     "dev": "babel -w src -d lib",
     "lint": "eslint .",
+    "format": "prettier --trailing-comma all --write \"src/*.js\" \"test/*.js\" && prettier --trailing-comma es5 --write \"scripts/*.js\"",
     "fix": "eslint . --fix",
     "ci": "npm run test",
     "changelog": "git log `git describe --tags --abbrev=0`..HEAD --pretty=format:' * %s (%an)' | grep -v 'Merge pull request'",
