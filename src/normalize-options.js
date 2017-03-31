@@ -1,16 +1,15 @@
 // @flow
 import invariant from "invariant";
 import builtInsList from "../data/built-ins.json";
-import pluginFeatures from "../features/plugins";
-import defaultInclude from "./default-includes";
+import { defaultWebIncludes } from "./default-includes";
 import moduleTransformations from "./module-transformations";
 import type { ModuleOption, Options, StrictOptions } from "./types";
 
-const validIncludesAndExcludes: Array<string> = [
+const validIncludesAndExcludes = [
   ...Object.keys(pluginFeatures),
   ...Object.keys(moduleTransformations).map(m => moduleTransformations[m]),
   ...Object.keys(builtInsList),
-  ...defaultInclude,
+  ...defaultWebIncludes,
 ];
 
 export const validateIncludesAndExcludes = (
@@ -22,19 +21,16 @@ export const validateIncludesAndExcludes = (
     `Invalid Option: The '${type}' option must be an Array<String> of plugins/built-ins`,
   );
 
-  const unknownOpts = opts.reduce(
-    (all, opt) => {
-      if (validIncludesAndExcludes.indexOf(opt) === -1) {
-        return all.concat(opt);
-      }
-      return all;
-    },
-    [],
-  );
+  const unknownOpts = [];
+  opts.forEach(opt => {
+    if (validIncludesAndExcludes.indexOf(opt) === -1) {
+      unknownOpts.push(opt);
+    }
+  });
 
   invariant(
     unknownOpts.length === 0,
-    `Invalid Option: The plugins/built-ins '${unknownOpts.toString()}' passed to the '${type}' option are not
+    `Invalid Option: The plugins/built-ins '${unknownOpts}' passed to the '${type}' option are not
     valid. Please check data/[plugin-features|built-in-features].js in babel-preset-env`,
   );
 
@@ -49,7 +45,7 @@ export const checkDuplicateIncludeExcludes = (
 
   invariant(
     duplicates.length === 0,
-    `Invalid Option: The plugins/built-ins '${duplicates.toString()}' were found in both the "include" and
+    `Invalid Option: The plugins/built-ins '${duplicates}' were found in both the "include" and
     "exclude" options.`,
   );
 };
@@ -79,30 +75,13 @@ export const validateModulesOption = (
   return modulesOpt;
 };
 
-export default function normalizeOptions(opts: Options): StrictOptions {
-  // TODO: remove whitelist in favor of include in next major
-  if (opts.whitelist) {
-    console.warn(
-      `Deprecation Warning: The "whitelist" option has been deprecated in favor of "include" to
-      match the newly added "exclude" option (instead of "blacklist").`,
-    );
-  }
-
-  invariant(
-    !(opts.whitelist && opts.include),
-    `Invalid Option: The "whitelist" and the "include" option are the same and one can be used at
-    a time`,
-  );
-
-  checkDuplicateIncludeExcludes(opts.whitelist || opts.include, opts.exclude);
+export default function normalizeOptions(opts) {
+  checkDuplicateIncludeExcludes(opts.include, opts.exclude);
 
   return {
     debug: opts.debug,
     exclude: validateIncludesAndExcludes(opts.exclude, "exclude"),
-    include: validateIncludesAndExcludes(
-      opts.whitelist || opts.include,
-      "include",
-    ),
+    include: validateIncludesAndExcludes(opts.include, "include"),
     loose: validateLooseOption(opts.loose),
     moduleType: validateModulesOption(opts.modules),
     targets: opts.targets,

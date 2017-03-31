@@ -2,11 +2,10 @@
 
 const babelPresetEnv = require("../lib/index.js");
 const assert = require("assert");
-const { versions: electronToChromiumData } = require("electron-to-chromium");
 
 describe("babel-preset-env", () => {
   describe("getTargets", () => {
-    it("should return the current node version with option 'current'", function() {
+    it("should return the current node version with option 'current'", () => {
       assert.deepEqual(
         babelPresetEnv.getTargets({
           node: true,
@@ -27,64 +26,34 @@ describe("babel-preset-env", () => {
     });
   });
 
-  describe("getTargets + electron", () => {
-    it("should work with a string", function() {
+  describe("getTargets + uglify", () => {
+    it("should work with `true`", function() {
       assert.deepEqual(
         babelPresetEnv.getTargets({
-          electron: "1.0",
+          uglify: true,
         }),
         {
-          chrome: 49,
+          uglify: true,
         },
       );
     });
 
-    it("should work with a number", function() {
+    it("should ignore `false`", function() {
       assert.deepEqual(
         babelPresetEnv.getTargets({
-          electron: 1.0,
+          uglify: false,
         }),
-        {
-          chrome: 49,
-        },
+        {},
       );
     });
 
-    it("should preserve lower Chrome number if Electron version is more recent", function() {
+    it("should ignore `null`", function() {
       assert.deepEqual(
         babelPresetEnv.getTargets({
-          electron: 1.4,
-          chrome: 50,
+          uglify: null,
         }),
-        {
-          chrome: 50,
-        },
+        {},
       );
-    });
-
-    it("should overwrite Chrome number if Electron version is older", function() {
-      assert.deepEqual(
-        babelPresetEnv.getTargets({
-          electron: 1.0,
-          chrome: 50,
-        }),
-        {
-          chrome: 49,
-        },
-      );
-    });
-
-    Object.keys(electronToChromiumData).forEach(electronVersion => {
-      it(`"should work for Electron: ${electronVersion}`, function() {
-        assert.deepEqual(
-          babelPresetEnv.getTargets({
-            electron: electronVersion,
-          }),
-          {
-            chrome: electronToChromiumData[electronVersion],
-          },
-        );
-      });
     });
   });
 
@@ -176,6 +145,18 @@ describe("babel-preset-env", () => {
       assert(babelPresetEnv.isPluginRequired(targets, plugin) === true);
     });
 
+    it("returns true if uglify is specified as a target", () => {
+      const plugin = {
+        chrome: 50,
+      };
+      const targets = {
+        chrome: 55,
+        uglify: true,
+      };
+
+      assert(babelPresetEnv.isPluginRequired(targets, plugin) === true);
+    });
+
     it("doesn't throw when specifying a decimal for node", () => {
       const plugin = {
         node: 6,
@@ -211,8 +192,8 @@ describe("babel-preset-env", () => {
     });
   });
 
-  describe("transformIncludesAndExcludes", function() {
-    it("should return in transforms array", function() {
+  describe("transformIncludesAndExcludes", () => {
+    it("should return in transforms array", () => {
       assert.deepEqual(
         babelPresetEnv.transformIncludesAndExcludes([
           "transform-es2015-arrow-functions",
@@ -225,7 +206,7 @@ describe("babel-preset-env", () => {
       );
     });
 
-    it("should return in built-ins array", function() {
+    it("should return in built-ins array", () => {
       assert.deepEqual(
         babelPresetEnv.transformIncludesAndExcludes(["es6.map"]),
         {

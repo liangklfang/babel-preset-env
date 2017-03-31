@@ -1,8 +1,7 @@
 // @flow
 import browserslist from "browserslist";
 import builtInsList from "../data/built-ins.json";
-import defaultInclude from "./default-includes";
-import { electronToChromium } from "electron-to-chromium";
+import { defaultWebIncludes } from "./default-includes";
 import moduleTransformations from "./module-transformations";
 import normalizeOptions from "./normalize-options.js";
 import pluginList from "../data/plugins.json";
@@ -125,40 +124,22 @@ const _extends = Object.assign ||
   };
 
 export const getTargets = (targets = {}) => {
-  const targetOps = _extends({}, targets);
+  const targetOpts = _extends({}, targets);
 
-  if (targetOps.node === true || targetOps.node === "current") {
-    targetOps.node = getCurrentNodeVersion();
+  if (targetOpts.node === true || targetOpts.node === "current") {
+    targetOpts.node = getCurrentNodeVersion();
   }
 
-  // Rewrite Electron versions to their Chrome equivalents
-  if (targetOps.electron) {
-    const electronChromeVersion = parseInt(
-      electronToChromium(targetOps.electron),
-      10,
-    );
-
-    if (!electronChromeVersion) {
-      throw new Error(
-        `Electron version ${targetOps.electron} is either too old or too new`,
-      );
-    }
-
-    if (targetOps.chrome) {
-      targetOps.chrome = Math.min(targetOps.chrome, electronChromeVersion);
-    } else {
-      targetOps.chrome = electronChromeVersion;
-    }
-
-    delete targetOps.electron;
+  if (targetOpts.hasOwnProperty("uglify") && !targetOpts.uglify) {
+    delete targetOpts.uglify;
   }
 
-  const browserOpts = targetOps.browsers;
+  const browserOpts = targetOpts.browsers;
   if (isBrowsersQueryValid(browserOpts)) {
     const queryBrowsers = getLowestVersions(browserslist(browserOpts));
-    return mergeBrowsers(queryBrowsers, targetOps);
+    return mergeBrowsers(queryBrowsers, targetOpts);
   }
-  return targetOps;
+  return targetOpts;
 };
 
 let hasBeenLogged = false;
@@ -179,12 +160,20 @@ const logPlugin = (plugin, targets, list) => {
 };
 
 const filterItem = (targets, exclusions, list, item) => {
-  const isDefault = defaultInclude.indexOf(item) >= 0;
+  const isDefault = defaultWebIncludes.indexOf(item) >= 0;
   const notExcluded = exclusions.indexOf(item) === -1;
 
   if (isDefault) return notExcluded;
   const isRequired = isPluginRequired(targets, list[item]);
   return isRequired && notExcluded;
+};
+
+const getBuiltInTargets = targets => {
+  const builtInTargets = _extends({}, targets);
+  if (builtInTargets.uglify != null) {
+    delete builtInTargets.uglify;
+  }
+  return builtInTargets;
 };
 
 export const transformIncludesAndExcludes = opts => ({
@@ -193,22 +182,17 @@ export const transformIncludesAndExcludes = opts => ({
   builtIns: opts.filter(opt => opt.match(/^(es\d+|web)\./)),
 });
 
-export default function buildPreset(
-  context: Object,
-  opts: Options = {},
-): Array<PluginType> {
-  const validatedOptions: StrictOptions = normalizeOptions(opts);
-  const {
-    debug,
-    loose,
-    moduleType,
-    useBuiltIns,
-  }: {
-    debug: DebugOption,
-    loose: LooseOption,
-    moduleType: ModuleOption,
-    useBuiltIns: UseBuiltInsOption,
-  } = validatedOptions;
+function getPlatformSpecificDefaultFor(targets) {
+  const targetNames = Object.keys(targets);
+  const isAnyTarget = !targetNames.length;
+  const isWebTarget = targetNames.some(name => name !== "node");
+
+  return isAnyTarget || isWebTarget ? defaultWebIncludes : [];
+}
+
+export default function buildPreset(context, opts = {}) {
+  const validatedOptions = normalizeOptions(opts);
+  const { debug, loose, moduleType, useBuiltIns } = validatedOptions;
 
   const targets: TargetsOption = getTargets(validatedOptions.targets);
   const include = transformIncludesAndExcludes(validatedOptions.include);
@@ -220,21 +204,22 @@ export default function buildPreset(
     exclude.plugins,
     pluginList,
   );
-  const transformations: Array<string> = Object.keys(pluginList)
+  const transformations = Object.keys(pluginList)
     .filter(filterPlugins)
     .concat(include.plugins);
 
-  let polyfills: Array<string> = [];
+  let polyfills;
+  let polyfillTargets;
   if (useBuiltIns) {
+    polyfillTargets = getBuiltInTargets(targets);
     const filterBuiltIns = filterItem.bind(
       null,
-      targets,
+      polyfillTargets,
       exclude.builtIns,
       builtInsList,
     );
-
     polyfills = Object.keys(builtInsList)
-      .concat(defaultInclude)
+      .concat(getPlatformSpecificDefaultFor(polyfillTargets))
       .filter(filterBuiltIns)
       .concat(include.builtIns);
   }
@@ -246,24 +231,21 @@ export default function buildPreset(
     console.log(JSON.stringify(targets, null, 2));
     console.log(`\nModules transform: ${moduleType}`);
     console.log("\nUsing plugins:");
-    transformations.forEach((transform: string) => {
+    transformations.forEach(transform => {
       logPlugin(transform, targets, pluginList);
     });
     if (useBuiltIns && polyfills.length) {
       console.log("\nUsing polyfills:");
-      polyfills.forEach((polyfill: string) => {
-        logPlugin(polyfill, targets, builtInsList);
+      polyfills.forEach(polyfill => {
+        logPlugin(polyfill, polyfillTargets, builtInsList);
       });
     }
   }
 
-  const regenerator: boolean = transformations.indexOf(
-    "transform-regenerator",
-  ) >= 0;
-  const modulePlugin: ?string = moduleType !== false
-    ? moduleTransformations[moduleType]
-    : null;
-  const plugins: Array<PluginType> = [];
+  const regenerator = transformations.indexOf("transform-regenerator") >= 0;
+  const modulePlugin = moduleType !== false &&
+    moduleTransformations[moduleType];
+  const plugins = [];
 
   if (modulePlugin) {
     const fullPluginName = `babel-plugin-${modulePlugin}`;

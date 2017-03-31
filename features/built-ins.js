@@ -1,26 +1,69 @@
-// @flow
 // https://github.com/zloirock/core-js
-import type { BuiltIn, FeaturesMap } from "./types";
 
-type BuiltInsMap = FeaturesMap<BuiltIn>;
+const typedArrayMethods = [
+  "typed arrays / %TypedArray%.from",
+  "typed arrays / %TypedArray%.of",
+  "typed arrays / %TypedArray%.prototype.subarray",
+  "typed arrays / %TypedArray%.prototype.join",
+  "typed arrays / %TypedArray%.prototype.indexOf",
+  "typed arrays / %TypedArray%.prototype.lastIndexOf",
+  "typed arrays / %TypedArray%.prototype.slice",
+  "typed arrays / %TypedArray%.prototype.every",
+  "typed arrays / %TypedArray%.prototype.filter",
+  "typed arrays / %TypedArray%.prototype.forEach",
+  "typed arrays / %TypedArray%.prototype.map",
+  "typed arrays / %TypedArray%.prototype.reduce",
+  "typed arrays / %TypedArray%.prototype.reduceRight",
+  "typed arrays / %TypedArray%.prototype.reverse",
+  "typed arrays / %TypedArray%.prototype.some",
+  "typed arrays / %TypedArray%.prototype.sort",
+  "typed arrays / %TypedArray%.prototype.copyWithin",
+  "typed arrays / %TypedArray%.prototype.find",
+  "typed arrays / %TypedArray%.prototype.findIndex",
+  "typed arrays / %TypedArray%.prototype.fill",
+  "typed arrays / %TypedArray%.prototype.keys",
+  "typed arrays / %TypedArray%.prototype.values",
+  "typed arrays / %TypedArray%.prototype.entries",
+  "typed arrays / %TypedArray%.prototype[Symbol.iterator]",
+  "typed arrays / %TypedArray%[Symbol.species]"
+];
 
-export const es2015: BuiltInsMap = {
+const es2015 = {
   // "es6.typed/array-buffer": "typed arrays / ",
   "es6.typed.data-view": "typed arrays / DataView",
-  "es6.typed.int8-array": "typed arrays / Int8Array",
-  "es6.typed.uint8-array": "typed arrays / Uint8Array",
-  "es6.typed.uint8-clamped-array": "typed arrays / Uint8ClampedArray",
-  "es6.typed.int16-array": "typed arrays / Int16Array",
-  "es6.typed.uint16-array": "typed arrays / Uint16Array",
-  "es6.typed.int32-array": "typed arrays / Int32Array",
-  "es6.typed.uint32-array": "typed arrays / Uint32Array",
-  "es6.typed.float32-array": "typed arrays / Float32Array",
-  "es6.typed.float64-array": "typed arrays / Float64Array",
+  "es6.typed.int8-array": {
+    features: ["typed arrays / Int8Array"].concat(typedArrayMethods)
+  },
+  "es6.typed.uint8-array": {
+    features: ["typed arrays / Uint8Array"].concat(typedArrayMethods)
+  },
+  "es6.typed.uint8-clamped-array": {
+    features: ["typed arrays / Uint8ClampedArray"].concat(typedArrayMethods)
+  },
+  "es6.typed.int16-array": {
+    features: ["typed arrays / Int16Array"].concat(typedArrayMethods)
+  },
+  "es6.typed.uint16-array": {
+    features: ["typed arrays / Uint16Array"].concat(typedArrayMethods)
+  },
+  "es6.typed.int32-array": {
+    features: ["typed arrays / Int32Array"].concat(typedArrayMethods)
+  },
+  "es6.typed.uint32-array": {
+    features: ["typed arrays / Uint32Array"].concat(typedArrayMethods)
+  },
+  "es6.typed.float32-array": {
+    features: ["typed arrays / Float32Array"].concat(typedArrayMethods)
+  },
+  "es6.typed.float64-array": {
+    features: ["typed arrays / Float64Array"].concat(typedArrayMethods)
+  },
 
   "es6.map": "Map",
   "es6.set": "Set",
   "es6.weak-map": "WeakMap",
   "es6.weak-set": "WeakSet",
+
   // Proxy not implementable
 
   "es6.reflect.apply": "Reflect / Reflect.apply",
@@ -123,11 +166,11 @@ export const es2015: BuiltInsMap = {
   "es6.math.trunc": "Math methods / Math.trunc",
 };
 
-export const es2016: BuiltInsMap = {
+const es2016 = {
   "es7.array.includes": "Array.prototype.includes",
 };
 
-export const es2017: BuiltInsMap = {
+const es2017 = {
   "es7.object.values": "Object static methods / Object.values",
   "es7.object.entries": "Object static methods / Object.entries",
   "es7.object.get-own-property-descriptors": "Object static methods / Object.getOwnPropertyDescriptors",
@@ -135,4 +178,4 @@ export const es2017: BuiltInsMap = {
   "es7.string.pad-end": "String padding / String.prototype.padEnd",
 };
 
-export default ({...es2015, ...es2016, ...es2017}: BuiltInsMap);
+module.exports = Object.assign({}, es2015, es2016, es2017);
