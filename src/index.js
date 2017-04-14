@@ -56,15 +56,12 @@ let hasBeenLogged = false;
 
 const logPlugin = (plugin, targets, list) => {
   const envList = list[plugin] || {};
-  const filteredList = Object.keys(targets).reduce(
-    (a, b) => {
-      if (!envList[b] || semver.lt(targets[b], semverify(envList[b]))) {
-        a[b] = prettifyVersion(targets[b]);
-      }
-      return a;
-    },
-    {},
-  );
+  const filteredList = Object.keys(targets).reduce((a, b) => {
+    if (!envList[b] || semver.lt(targets[b], semverify(envList[b]))) {
+      a[b] = prettifyVersion(targets[b]);
+    }
+    return a;
+  }, {});
   const logStr = `  ${plugin} ${JSON.stringify(filteredList)}`;
   console.log(logStr);
 };
@@ -121,18 +118,41 @@ const filterItems = (list, includes, excludes, targets, defaultItems) => {
 };
 
 export default function buildPreset(context, opts = {}) {
-  const validatedOptions = normalizeOptions(opts);
-  const { debug, loose, moduleType, useBuiltIns } = validatedOptions;
+  const {
+    debug,
+    exclude: optionsExclude,
+    include: optionsInclude,
+    loose,
+    moduleType,
+    targets: optionsTargets,
+    useBuiltIns,
+    useSyntax,
+  } = normalizeOptions(opts);
 
-  const targets = getTargets(validatedOptions.targets);
-  const include = transformIncludesAndExcludes(validatedOptions.include);
-  const exclude = transformIncludesAndExcludes(validatedOptions.exclude);
+  // TODO: remove this in next major
+  let hasUglifyTarget = false;
+
+  if (optionsTargets && optionsTargets.uglify) {
+    hasUglifyTarget = true;
+    delete optionsTargets.uglify;
+
+    console.log("");
+    console.log("The uglify target has been deprecated. Set the top level");
+    console.log("option `useSyntax: false` instead.");
+    console.log("");
+  }
+
+  const targets = getTargets(optionsTargets);
+  const include = transformIncludesAndExcludes(optionsInclude);
+  const exclude = transformIncludesAndExcludes(optionsExclude);
+
+  const transformTargets = !useSyntax || hasUglifyTarget ? {} : targets;
 
   const transformations = filterItems(
     pluginList,
     include.plugins,
     exclude.plugins,
-    targets,
+    transformTargets,
   );
 
   let polyfills;
@@ -156,10 +176,26 @@ export default function buildPreset(context, opts = {}) {
     console.log("\nUsing targets:");
     console.log(JSON.stringify(prettifyTargets(targets), null, 2));
     console.log(`\nModules transform: ${moduleType}`);
-    console.log("\nUsing plugins:");
-    transformations.forEach(transform => {
-      logPlugin(transform, targets, pluginList);
-    });
+    console.log("");
+    console.log("Plugins");
+    console.log("=========");
+    console.log("");
+
+    if (!transformations.size) {
+      console.log("Based on your targets none were added.");
+    } else {
+      if (!useSyntax) {
+        console.log("Added all plugins (useSyntax: false):");
+      } else if (hasUglifyTarget) {
+        console.log("Added all plugins (target: uglify):");
+      } else {
+        console.log("Added the following plugins based on your targets:");
+      }
+
+      transformations.forEach(transform => {
+        logPlugin(transform, transformTargets, pluginList);
+      });
+    }
   }
 
   const plugins = [];
@@ -172,7 +208,8 @@ export default function buildPreset(context, opts = {}) {
   }
 
   transformations.forEach(pluginName =>
-    plugins.push([require(`babel-plugin-${pluginName}`), { loose }]));
+    plugins.push([require(`babel-plugin-${pluginName}`), { loose }]),
+  );
 
   const regenerator = transformations.has("transform-regenerator");
 

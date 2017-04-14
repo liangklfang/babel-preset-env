@@ -43,17 +43,23 @@ export const checkDuplicateIncludeExcludes = (include = [], exclude = []) => {
   );
 };
 
-// TODO: Allow specifying plugins as either shortened or full name
-// babel-plugin-transform-es2015-classes
-// transform-es2015-classes
-export const validateLooseOption = (looseOpt = false) => {
-  invariant(
-    typeof looseOpt === "boolean",
-    "Invalid Option: The 'loose' option must be a boolean.",
-  );
+export const validateBoolOption = (name, value, defaultValue) => {
+  if (typeof value === "undefined") {
+    value = defaultValue;
+  }
 
-  return looseOpt;
+  if (typeof value !== "boolean") {
+    throw new Error(`Preset env: '${name}' option must be a boolean.`);
+  }
+
+  return value;
 };
+
+export const validateLooseOption = looseOpt =>
+  validateBoolOption("loose", looseOpt, false);
+
+export const validateUseSyntaxOption = useSyntax =>
+  validateBoolOption("useSyntax", useSyntax, true);
 
 export const validateModulesOption = (modulesOpt = "commonjs") => {
   invariant(
@@ -97,5 +103,6 @@ export default function normalizeOptions(opts) {
     moduleType: validateModulesOption(opts.modules),
     targets: opts.targets,
     useBuiltIns: validateUseBuiltInsOption(opts.useBuiltIns),
+    useSyntax: validateUseSyntaxOption(opts.useSyntax),
   };
 }

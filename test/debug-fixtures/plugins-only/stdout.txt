@@ -15,7 +15,10 @@ Using targets:
 
 Modules transform: commonjs
 
-Using plugins:
+Plugins
+=========
+
+Added the following plugins based on your targets:
   transform-es2015-destructuring {"firefox":"52"}
   transform-es2015-for-of {"firefox":"52"}
   transform-es2015-function-name {"firefox":"52"}

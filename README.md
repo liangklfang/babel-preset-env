@@ -120,16 +120,6 @@ A query to select browsers (ex: last 2 versions, > 5%) using [browserslist](http
 
 Note, browsers' results are overridden by explicit items from `targets`.
 
-### `targets.uglify`
-
-`number | true`
-
-UglifyJS does not currently support any ES6 syntax, so if you are using Uglify to minify your code, targeting later browsers may cause Uglify to throw syntax errors.
-
-To prevent these errors - specify the uglify option, which will enable all plugins and, as a result, fully compile your code to ES5. However, the `useBuiltIns` option will still work as before, and only include the polyfills that your target(s) need.
-
-> NOTE: Uglify has a work-in-progress "Harmony" branch to address the lack of ES6 support, but it is not yet stable.  You can follow its progress in [UglifyJS2 issue #448](https://github.com/mishoo/UglifyJS2/issues/448).  If you require an alternative minifier which _does_ support ES6 syntax, we recommend using [Babili](https://github.com/babel/babili).
-
 ### `loose`
 
 `boolean`, defaults to `false`.
@@ -248,6 +238,16 @@ import "babel-polyfill/core-js/modules/es7.string.pad-end";
 #### `useBuiltIns: false`
 
 Don't add polyfills automatically per file, or transform `import "babel-polyfill"` to individual polyfills.
+
+### `useSyntax`
+
+`boolean`, defaults to `true`.
+
+NOTE: `targets.uglify` is deprecated and will be removed in the next major in favor of this.
+
+Runs the transforms needed for the targeted environment(s). Set this to `false` if you want to force running _all_ transforms which is useful if the output will be run through UglifyJS, or an environment that only supports ES5.
+
+> NOTE: Uglify has a work-in-progress "Harmony" branch to address the lack of ES6 support, but it is not yet stable.  You can follow its progress in [UglifyJS2 issue #448](https://github.com/mishoo/UglifyJS2/issues/448).  If you require an alternative minifier which _does_ support ES6 syntax, we recommend using [Babili](https://github.com/babel/babili).
 
 ---
 
